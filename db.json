@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "dr.smith@university.edu",
+      "role": "Healthcare Professional"
+    },
+    {
+      "id": "2",
+      "email": "jane.doe@institute.edu",
+      "role": "Engineer"
+    },
+    {
+      "email": "kagan@student.cankaya.edu.tr",
+      "role": "Engineer",
+      "password": "123",
+      "id": "QhdFqAnm33k"
+    }
+  ],
+  "posts": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}
