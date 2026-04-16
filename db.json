@@ -17,6 +17,17 @@
       "id": "QhdFqAnm33k"
     }
   ],
-  "posts": [],
+  "posts": [
+    {
+      "title": "deneme",
+      "domain": "Kardiyoloji",
+      "expertiseRequired": "veri analizi",
+      "stage": "Prototip",
+      "description": "asdas",
+      "status": "Açık",
+      "createdAt": "2026-04-16T19:48:06.084Z",
+      "id": "Qivpt8x5WZw"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
