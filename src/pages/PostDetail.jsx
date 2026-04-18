@@ -1,90 +1,180 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+
+const DOMAIN_STYLE = {
+  'Cardiology': 'bg-red-50 text-red-700 border-red-200',
+  'Radiology': 'bg-purple-50 text-purple-700 border-purple-200',
+  'Neurology': 'bg-amber-50 text-amber-700 border-amber-200',
+  'General Surgery': 'bg-orange-50 text-orange-700 border-orange-200',
+  'Software Development': 'bg-blue-50 text-blue-700 border-blue-200',
+  'Genomics': 'bg-teal-50 text-teal-700 border-teal-200',
+  'Oncology': 'bg-pink-50 text-pink-700 border-pink-200',
+};
 
 export default function PostDetail() {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [interested, setInterested] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        const response = await fetch(`http://localhost:3001/posts/${id}`);
-        const data = await response.json();
-        setPost(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Detaylar yüklenirken hata oluştu:", error);
-        setLoading(false);
-      }
-    };
-    fetchPost();
+    fetch(`http://localhost:3001/posts/${id}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((data) => { setPost(data); setLoading(false); })
+      .catch(() => { setError('Project not found.'); setLoading(false); });
   }, [id]);
 
-  if (loading) return <div className="p-20 text-center font-bold">Yükleniyor...</div>;
-  if (!post) return <div className="p-20 text-center font-bold">İlan bulunamadı.</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 pt-16 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <svg className="w-8 h-8 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-slate-500 text-sm">Loading project…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !post) {
+    return (
+      <div className="min-h-screen bg-slate-50 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-bold text-slate-900 mb-3">{error || 'Project not found'}</h2>
+          <Link to="/dashboard" className="text-blue-600 text-sm font-medium hover:text-blue-700">← Back to Dashboard</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const isOpen = post.status === 'Open' || post.status === 'Açık';
+  const tags = post.expertiseRequired
+    ?.split(',')
+    .map((t) => t.trim())
+    .filter(Boolean) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
-        {/* Üst Kısım: Başlık ve Rozetler */}
-        <div className="p-8 md:p-12 border-b border-gray-50">
-          <Link to="/dashboard" className="text-blue-600 font-bold text-sm mb-6 inline-block hover:underline">
-            ← Panoya Geri Dön
-          </Link>
-          <div className="flex flex-wrap gap-2 mb-6">
-            <span className="bg-blue-50 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full uppercase">
-              {post.domain}
-            </span>
-            <span className="bg-gray-100 text-gray-600 text-xs font-black px-4 py-1.5 rounded-full uppercase">
-              {post.stage}
-            </span>
-          </div>
-          <h1 className="text-4xl font-black text-gray-900 leading-tight mb-4 uppercase italic">
-            {post.title}
-          </h1>
-          <p className="text-gray-500 text-lg">İlan Tarihi: {new Date(post.createdAt).toLocaleDateString('tr-TR')}</p>
-        </div>
+    <div className="min-h-screen bg-slate-50 pt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-        {/* Orta Kısım: İçerik */}
-        <div className="p-8 md:p-12 grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div className="md:col-span-2 space-y-8">
-            <section>
-              <h2 className="text-xl font-black text-gray-900 mb-4 uppercase tracking-tighter italic underline decoration-blue-500 decoration-4">
-                Proje Açıklaması
-              </h2>
-              <p className="text-gray-600 leading-relaxed text-lg">
-                {post.description || "Bu proje için henüz detaylı bir açıklama girilmemiş."}
+        {/* Back */}
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm font-medium mb-8 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Dashboard
+        </button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* ── Main content ── */}
+          <div className="lg:col-span-2 space-y-5">
+
+            {/* Header card */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-8">
+              <div className="flex flex-wrap items-center gap-2.5 mb-5">
+                <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${DOMAIN_STYLE[post.domain] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                  {post.domain}
+                </span>
+                {post.stage && (
+                  <span className="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                    {post.stage === 'Fikir Aşaması' ? 'Idea Stage' : post.stage}
+                  </span>
+                )}
+                <span className={`flex items-center gap-1.5 text-xs font-semibold ${isOpen ? 'text-emerald-600' : 'text-slate-400'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                  {isOpen ? 'Actively Recruiting' : post.status}
+                </span>
+              </div>
+
+              <h1 className="text-3xl font-bold text-slate-900 mb-4 leading-tight tracking-tight">{post.title}</h1>
+
+              {post.createdAt && (
+                <p className="text-slate-400 text-sm">
+                  Posted{' '}
+                  {new Date(post.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                  })}
+                </p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-8">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Project Overview</h2>
+              <p className="text-slate-600 leading-relaxed text-[15px]">
+                {post.description || 'No description provided.'}
               </p>
-            </section>
+            </div>
 
-            <section>
-              <h2 className="text-xl font-black text-gray-900 mb-4 uppercase tracking-tighter italic underline decoration-blue-500 decoration-4">
-                Aranan Uzmanlıklar
-              </h2>
+            {/* Expertise */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-8">
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Expertise Sought</h2>
               <div className="flex flex-wrap gap-2">
-                {post.expertiseRequired.split(',').map((skill, index) => (
-                  <span key={index} className="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-lg">
-                    {skill.trim()}
+                {(tags.length > 0 ? tags : [post.expertiseRequired]).map((tag) => (
+                  <span key={tag} className="px-3 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm font-medium">
+                    {tag}
                   </span>
                 ))}
               </div>
-            </section>
+            </div>
           </div>
 
-          {/* Yan Panel: Eylem Kutusu */}
-          <div className="space-y-6">
-            <div className="bg-blue-600 p-8 rounded-[2rem] text-white shadow-xl shadow-blue-100">
-              <h3 className="text-xl font-black mb-4 leading-tight uppercase">İş Birliği Başlat</h3>
-              <p className="text-blue-100 text-sm mb-6">Bu proje ilginizi çekti mi? İlan sahibiyle iletişime geçerek süreci başlatabilirsiniz.</p>
-              <button className="w-full bg-white text-blue-600 font-black py-4 rounded-xl hover:bg-gray-100 transition-all shadow-lg active:scale-95">
-                MESAJ GÖNDER
-              </button>
+          {/* ── Sidebar ── */}
+          <div className="space-y-4">
+
+            {/* CTA card */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 sticky top-20">
+              <h3 className="font-bold text-slate-900 mb-2 text-lg">Interested in this project?</h3>
+              <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                Express your interest and the project lead will review your profile. Your contact details stay private until mutual consent.
+              </p>
+
+              {interested ? (
+                <div className="text-center py-5">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="font-semibold text-slate-900 text-sm">Interest Registered</p>
+                  <p className="text-slate-500 text-xs mt-1">You'll be notified when the lead responds.</p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setInterested(true)}
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors btn-press text-sm mb-3"
+                >
+                  Express Interest
+                </button>
+              )}
+
+              <Link
+                to="/dashboard"
+                className="w-full block text-center py-3 border border-slate-200 text-slate-600 font-medium rounded-xl hover:bg-slate-50 transition-colors text-sm"
+              >
+                Browse Other Projects
+              </Link>
             </div>
-            
-            <div className="p-6 border border-gray-100 rounded-[2rem] bg-gray-50/50">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Güvenlik Notu</p>
-              <p className="text-[10px] text-gray-400 leading-tight">İş birliği sürecinde KVKK ve gizlilik kurallarına uymanız beklenmektedir.</p>
+
+            {/* Trust */}
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span className="text-slate-700 text-sm font-semibold">Privacy Protected</span>
+              </div>
+              <p className="text-slate-500 text-xs leading-relaxed">
+                All collaborations are initiated through HealthAI's secure messaging system. Contact details are never shared without explicit consent from both parties. GDPR & KVKK compliant.
+              </p>
             </div>
           </div>
         </div>

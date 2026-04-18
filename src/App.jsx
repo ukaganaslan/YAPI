@@ -1,28 +1,28 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Landing from './pages/Landing'; // Yeni
-import Login from './pages/Login'; // Yeni
+import Landing from './pages/Landing';
+import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail';
 
-function App() {
-  return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Landing />} /> {/* Ana sayfa artık bu */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/create-post" element={<CreatePost />} />
-          <Route path="/post/:id" element={<PostDetail />} />
-        </Routes>
-      </div>
-    </Router>
-  );
+function ProtectedRoute({ children }) {
+  return localStorage.getItem('user') ? children : <Navigate to="/login" replace />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/create-post" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+        <Route path="/post/:id" element={<ProtectedRoute><PostDetail /></ProtectedRoute>} />
+      </Routes>
+    </BrowserRouter>
+  );
+}

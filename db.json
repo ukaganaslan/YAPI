@@ -2,31 +2,122 @@
   "users": [
     {
       "id": "1",
-      "email": "dr.smith@university.edu",
+      "name": "Dr. Sarah Mitchell",
+      "email": "s.mitchell@harvard.edu",
+      "password": "password123",
       "role": "Healthcare Professional"
     },
     {
       "id": "2",
-      "email": "jane.doe@institute.edu",
+      "name": "James Chen",
+      "email": "j.chen@mit.edu",
+      "password": "password123",
       "role": "Engineer"
     },
     {
-      "email": "kagan@student.cankaya.edu.tr",
-      "role": "Engineer",
-      "password": "123",
-      "id": "QhdFqAnm33k"
+      "id": "3",
+      "name": "Dr. Anika Patel",
+      "email": "a.patel@upenn.edu",
+      "password": "password123",
+      "role": "Healthcare Professional"
     }
   ],
   "posts": [
     {
-      "title": "deneme",
-      "domain": "Kardiyoloji",
-      "expertiseRequired": "veri analizi",
-      "stage": "Prototip",
-      "description": "asdas",
-      "status": "Açık",
-      "createdAt": "2026-04-16T19:48:06.084Z",
-      "id": "Qivpt8x5WZw"
+      "id": "1",
+      "title": "AI-Powered Real-Time Arrhythmia Detection via 12-Lead ECG",
+      "domain": "Cardiology",
+      "expertiseRequired": "Machine Learning, Signal Processing, TensorFlow",
+      "stage": "Prototype",
+      "description": "We are developing a deep learning model to detect atrial fibrillation and other arrhythmias in real-time from standard 12-lead ECG signals. Our clinical team has annotated 15,000+ ECG recordings across 6 arrhythmia classes. We need an ML engineer with experience in time-series classification and edge deployment to help optimize inference for wearable hardware.",
+      "status": "Open",
+      "createdAt": "2026-04-10T08:30:00.000Z",
+      "authorEmail": "s.mitchell@harvard.edu",
+      "authorRole": "Healthcare Professional"
+    },
+    {
+      "id": "2",
+      "title": "Automated Pulmonary Nodule Detection in Low-Dose CT Scans",
+      "domain": "Radiology",
+      "expertiseRequired": "Computer Vision, 3D CNN, DICOM Processing",
+      "stage": "MVP",
+      "description": "Our radiology team is working on an AI-assisted CAD system for early detection of pulmonary nodules in low-dose CT scans. We have a dataset of 8,500 annotated CT volumes from 3 academic hospitals. Looking for a computer vision engineer to fine-tune our 3D U-Net architecture and improve sensitivity for sub-5mm nodules.",
+      "status": "Open",
+      "createdAt": "2026-04-08T14:00:00.000Z",
+      "authorEmail": "r.kim@stanford.edu",
+      "authorRole": "Healthcare Professional"
+    },
+    {
+      "id": "3",
+      "title": "Non-Invasive Intracranial Pressure Monitoring Device",
+      "domain": "Neurology",
+      "expertiseRequired": "Embedded Systems, Biomedical Sensors, Signal Filtering",
+      "stage": "Idea",
+      "description": "Current ICP monitoring requires invasive surgical implantation, creating significant risk for patients. We are exploring an ultrasound-based non-invasive approach using the optic nerve sheath diameter as a surrogate marker. Seeking a biomedical engineer to help design the transducer array and signal processing pipeline.",
+      "status": "Open",
+      "createdAt": "2026-04-12T10:45:00.000Z",
+      "authorEmail": "a.patel@upenn.edu",
+      "authorRole": "Healthcare Professional"
+    },
+    {
+      "id": "4",
+      "title": "Surgical Navigation AR Overlay for Laparoscopic Cholecystectomy",
+      "domain": "General Surgery",
+      "expertiseRequired": "Computer Vision, Augmented Reality, Real-time Rendering",
+      "stage": "Prototype",
+      "description": "We are building an AR overlay system that identifies critical structures (bile duct, hepatic artery) during laparoscopic surgery to reduce bile duct injury rates. We have a labeled endoscopic video dataset of 1,200 procedures. Need an engineer with expertise in real-time semantic segmentation and AR integration for surgical optics.",
+      "status": "Open",
+      "createdAt": "2026-04-14T09:15:00.000Z",
+      "authorEmail": "m.torres@mayo.edu",
+      "authorRole": "Healthcare Professional"
+    },
+    {
+      "id": "5",
+      "title": "Federated Learning Platform for Multi-Site Clinical Trials",
+      "domain": "Software Development",
+      "expertiseRequired": "Federated Learning, Privacy-Preserving ML, Kubernetes, HIPAA",
+      "stage": "MVP",
+      "description": "We need a privacy-compliant federated learning infrastructure that allows multiple hospitals to collaboratively train AI models without sharing raw patient data. The system must comply with HIPAA and GDPR, support differential privacy, and integrate with existing EHR systems. Looking for a senior ML engineer with federated systems experience.",
+      "status": "Open",
+      "createdAt": "2026-04-05T16:30:00.000Z",
+      "authorEmail": "j.chen@mit.edu",
+      "authorRole": "Engineer"
+    },
+    {
+      "id": "6",
+      "title": "Predictive Biomarker Discovery for Early Alzheimer's Detection",
+      "domain": "Genomics",
+      "expertiseRequired": "Bioinformatics, Multi-omics Analysis, Survival Analysis",
+      "stage": "Idea",
+      "description": "We have longitudinal data from 800 patients including proteomics, metabolomics, and neuroimaging. We are looking for a bioinformatician to help identify novel blood-based biomarkers that predict cognitive decline 5+ years before symptom onset. Experience with multi-omics data integration and survival analysis is essential.",
+      "status": "Open",
+      "createdAt": "2026-04-11T11:00:00.000Z",
+      "authorEmail": "l.fisher@jhu.edu",
+      "authorRole": "Healthcare Professional"
+    },
+    {
+      "id": "7",
+      "title": "Smart Insulin Delivery System with Closed-Loop Glucose Control",
+      "domain": "Software Development",
+      "expertiseRequired": "Embedded Firmware, PID Control, BLE, iOS/Android",
+      "stage": "Prototype",
+      "description": "We are developing a closed-loop artificial pancreas system combining a CGM sensor with an insulin pump. The control algorithm runs on an embedded ARM Cortex-M4. We need a firmware engineer experienced in real-time control loops and mobile app integration for remote monitoring and dose adjustment.",
+      "status": "Open",
+      "createdAt": "2026-04-09T12:00:00.000Z",
+      "authorEmail": "w.nguyen@uc.edu",
+      "authorRole": "Healthcare Professional"
+    },
+    {
+      "id": "8",
+      "title": "Digital Pathology AI for Tumor Grading Automation",
+      "domain": "Oncology",
+      "expertiseRequired": "Whole Slide Image Analysis, PyTorch, Histopathology",
+      "stage": "MVP",
+      "description": "Manual tumor grading is time-consuming and subject to inter-observer variability. Our team has assembled 12,000 annotated whole slide images from 4 cancer types. We seek a computer vision engineer to improve our patch-based CNN pipeline and deploy it as a DICOM-compatible plugin for our pathology lab's existing LIS.",
+      "status": "Open",
+      "createdAt": "2026-04-03T08:00:00.000Z",
+      "authorEmail": "c.ross@sloan.edu",
+      "authorRole": "Healthcare Professional"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
