@@ -1,43 +1,26 @@
-/**
- * Centralized API helper for HealthAI frontend.
- * All fetch calls go through here so the base URL is defined in one place.
- */
-
 const BASE_URL = 'http://localhost:5000/api';
 
-/**
- * Get the JWT token stored at login.
- */
 export const getToken = () => localStorage.getItem('token');
 
-/**
- * Get the logged-in user object.
- */
 export const getUser = () => {
   const raw = localStorage.getItem('user');
   return raw ? JSON.parse(raw) : null;
 };
 
-/**
- * Store user session after login / register.
- */
 export const setSession = (token, user) => {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
 };
 
-/**
- * Clear session (logout).
- */
 export const clearSession = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 };
 
-/**
- * Core fetch wrapper.
- * Automatically attaches Authorization header if a token exists.
- */
+export const updateStoredUser = (user) => {
+  localStorage.setItem('user', JSON.stringify(user));
+};
+
 const apiFetch = async (endpoint, options = {}) => {
   const token = getToken();
 
@@ -51,6 +34,8 @@ const apiFetch = async (endpoint, options = {}) => {
     ...options,
     headers,
   });
+
+  if (options._raw) return res;
 
   const data = await res.json().catch(() => ({}));
 
@@ -66,6 +51,8 @@ export const authAPI = {
   register: (body) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
   login: (body) => apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   me: () => apiFetch('/auth/me'),
+  updateProfile: (body) => apiFetch('/auth/me', { method: 'PUT', body: JSON.stringify(body) }),
+  exportData: () => apiFetch('/auth/me/export', { _raw: true }),
   deleteAccount: () => apiFetch('/auth/me', { method: 'DELETE' }),
 };
 
@@ -77,6 +64,7 @@ export const postsAPI = {
     ).toString();
     return apiFetch(`/posts${qs ? `?${qs}` : ''}`);
   },
+  getMine: () => apiFetch('/posts/mine'),
   getById: (id) => apiFetch(`/posts/${id}`),
   create: (body) => apiFetch('/posts', { method: 'POST', body: JSON.stringify(body) }),
   update: (id, body) => apiFetch(`/posts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
@@ -104,6 +92,7 @@ export const adminAPI = {
     const qs = new URLSearchParams(params).toString();
     return apiFetch(`/admin/logs${qs ? `?${qs}` : ''}`);
   },
+  exportLogs: () => `${BASE_URL}/admin/logs/export?token=${getToken()}`,
   getStats: () => apiFetch('/admin/stats'),
 };
 

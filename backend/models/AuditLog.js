@@ -28,6 +28,7 @@ const auditLogSchema = new mongoose.Schema(
         'ADMIN_SUSPEND_USER',
         'ADMIN_DELETE_POST',
         'ADMIN_VIEW_LOGS',
+        'PROFILE_UPDATE',
         'ACCOUNT_DELETE',
         'DATA_EXPORT',
         'SECURITY_EVENT',

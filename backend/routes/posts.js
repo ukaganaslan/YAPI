@@ -1,18 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const { log } = require('../middleware/logger');
 
 // ── GET /api/posts ──────────────────────────────────────────────────────────
-// Public: anyone can browse posts
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   try {
     const { domain, stage, status, city, country, search, page = 1, limit = 20 } = req.query;
 
     const filter = {};
 
-    // Only show Active posts to guests; owners can see their own drafts
     if (!status) filter.status = { $in: ['Active', 'Meeting Scheduled'] };
     else if (status !== 'All') filter.status = status;
 
@@ -35,11 +33,24 @@ router.get('/', async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
-      .select('-meetingRequests'); // don't expose meeting requests in list view
+      .select('-meetingRequests');
 
     res.json({ total, page: Number(page), posts });
   } catch (err) {
     console.error('[GET /posts Error]', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── GET /api/posts/mine ─────────────────────────────────────────────────────
+router.get('/mine', protect, async (req, res) => {
+  try {
+    const posts = await Post.find({ author: req.user._id })
+      .sort({ createdAt: -1 })
+      .select('-meetingRequests');
+
+    res.json({ total: posts.length, posts });
+  } catch (err) {
     res.status(500).json({ message: 'Server error.' });
   }
 });
@@ -62,7 +73,7 @@ router.post('/', protect, async (req, res) => {
     const {
       title, domain, expertiseRequired, description, stage,
       commitmentLevel, collaborationType, confidentiality,
-      country, city, expiresAt, autoClose,
+      country, city, expiresAt, autoClose, status,
     } = req.body;
 
     const post = await Post.create({
@@ -73,7 +84,7 @@ router.post('/', protect, async (req, res) => {
       authorEmail: req.user.email,
       authorRole: req.user.role,
       authorName: req.user.name,
-      status: 'Active',
+      status: status === 'Draft' ? 'Draft' : 'Active',
     });
 
     await log({ action: 'POST_CREATE', req, targetEntity: post._id, targetType: 'Post' });
@@ -95,7 +106,6 @@ router.put('/:id', protect, async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: 'Post not found.' });
 
-    // Only the author or admin can edit
     const isOwner = post.author.toString() === req.user._id.toString();
     const isAdmin = req.user.role === 'Admin';
     if (!isOwner && !isAdmin) {
@@ -125,7 +135,6 @@ router.put('/:id', protect, async (req, res) => {
 });
 
 // ── PATCH /api/posts/:id/close ──────────────────────────────────────────────
-// Mark post as "Partner Found"
 router.patch('/:id/close', protect, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -178,6 +187,13 @@ router.post('/:id/meeting-request', protect, async (req, res) => {
       return res.status(400).json({ message: 'You cannot send a meeting request to your own post.' });
     }
 
+    const alreadySent = post.meetingRequests.some(
+      (r) => r.fromUser.toString() === req.user._id.toString() && r.status === 'Pending'
+    );
+    if (alreadySent) {
+      return res.status(400).json({ message: 'You already have a pending meeting request for this post.' });
+    }
+
     const { message, ndaAccepted, proposedSlots } = req.body;
 
     if (!ndaAccepted) {
@@ -204,7 +220,6 @@ router.post('/:id/meeting-request', protect, async (req, res) => {
 });
 
 // ── PATCH /api/posts/:id/meeting-request/:requestId ────────────────────────
-// Accept / decline a meeting request
 router.patch('/:id/meeting-request/:requestId', protect, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -234,7 +249,7 @@ router.patch('/:id/meeting-request/:requestId', protect, async (req, res) => {
     const action = status === 'Accepted' ? 'MEETING_REQUEST_ACCEPTED' : 'MEETING_REQUEST_DECLINED';
     await log({ action, req, targetEntity: post._id, targetType: 'Post' });
 
-    res.json({ message: `Meeting request ${status.toLowerCase()}.` });
+    res.json({ message: `Meeting request ${status.toLowerCase()}.`, post });
   } catch (err) {
     res.status(500).json({ message: 'Server error.' });
   }

@@ -1,15 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const { signToken } = require('../middleware/auth');
+const Post = require('../models/Post');
+const { signToken, protect } = require('../middleware/auth');
 const { log } = require('../middleware/logger');
 
 // ── POST /api/auth/register ─────────────────────────────────────────────────
+const universities = require('../data/university-domains.json');
+const knownEduDomains = new Set(universities.flatMap(u => u.domains.map(d => d.toLowerCase())));
+
+function isKnownEduDomain(email) {
+  const domain = email?.split('@')[1]?.toLowerCase();
+  return domain ? knownEduDomains.has(domain) : false;
+}
+
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role, institution, city, country } = req.body;
 
-    // Check if user already exists
+    if (!isKnownEduDomain(email)) {
+      return res.status(400).json({ message: 'Email domain not recognized as a valid institution. Please use your official university email.' });
+    }
+
     const existing = await User.findOne({ email: email?.toLowerCase() });
     if (existing) {
       return res.status(409).json({ message: 'An account with this email already exists.' });
@@ -17,7 +29,6 @@ router.post('/register', async (req, res) => {
 
     const user = await User.create({ name, email, password, role, institution, city, country });
 
-    // Audit log
     req.user = user;
     await log({ action: 'REGISTER', req, targetEntity: user._id, targetType: 'User' });
 
@@ -57,11 +68,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    // Include password field explicitly (select: false in schema)
     const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
     if (!user) {
-      // Audit failed login
       req.user = null;
       await log({ action: 'LOGIN_FAILED', req, details: `Unknown email: ${email}`, result: 'FAILURE' });
       return res.status(401).json({ message: 'Invalid email or password.' });
@@ -78,7 +87,6 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
-    // Update last login
     user.lastLoginAt = new Date();
     await user.save({ validateBeforeSave: false });
 
@@ -106,10 +114,54 @@ router.post('/login', async (req, res) => {
 });
 
 // ── GET /api/auth/me ────────────────────────────────────────────────────────
-const { protect } = require('../middleware/auth');
-
 router.get('/me', protect, async (req, res) => {
   res.json({ user: req.user });
+});
+
+// ── PUT /api/auth/me ────────────────────────────────────────────────────────
+router.put('/me', protect, async (req, res) => {
+  try {
+    const { name, institution, city, country, bio, expertiseTags } = req.body;
+    const user = req.user;
+
+    if (name) user.name = name;
+    if (institution !== undefined) user.institution = institution;
+    if (city !== undefined) user.city = city;
+    if (country !== undefined) user.country = country;
+    if (bio !== undefined) user.bio = bio;
+    if (expertiseTags !== undefined) user.expertiseTags = expertiseTags;
+
+    await user.save({ validateBeforeSave: false });
+    await log({ action: 'PROFILE_UPDATE', req, targetEntity: user._id, targetType: 'User' });
+
+    res.json({ message: 'Profile updated.', user });
+  } catch (err) {
+    console.error('[Profile Update Error]', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── GET /api/auth/me/export ─────────────────────────────────────────────────
+router.get('/me/export', protect, async (req, res) => {
+  try {
+    const user = req.user.toJSON();
+    const posts = await Post.find({ author: req.user._id }).select('-meetingRequests');
+
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      profile: user,
+      posts,
+    };
+
+    await log({ action: 'DATA_EXPORT', req, targetEntity: req.user._id, targetType: 'User' });
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="healthai-my-data.json"');
+    res.json(exportData);
+  } catch (err) {
+    console.error('[Data Export Error]', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
 });
 
 // ── DELETE /api/auth/me ─────────────────────────────────────────────────────

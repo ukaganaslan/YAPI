@@ -294,9 +294,9 @@ export default function Landing() {
               © 2026 HealthAI. Empowering medical innovation through collaboration.
             </p>
             <div className="flex items-center gap-6 text-sm" style={{ color: '#475569' }}>
-              {['Privacy', 'Terms', 'Contact'].map((l) => (
-                <a key={l} href="#" className="hover:text-slate-300 transition-colors">{l}</a>
-              ))}
+              <a href="/privacy" className="hover:text-slate-300 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-slate-300 transition-colors">Terms</a>
+              <a href="#" className="hover:text-slate-300 transition-colors">Contact</a>
             </div>
           </div>
         </div>
