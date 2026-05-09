@@ -14,7 +14,10 @@ router.get('/', optionalAuth, async (req, res) => {
     if (!status) filter.status = { $in: ['Active', 'Meeting Scheduled'] };
     else if (status !== 'All') filter.status = status;
 
-    if (domain && domain !== 'All') filter.domain = domain;
+    if (domain && domain !== 'All') {
+      const domainList = domain.split(',').map((d) => d.trim()).filter(Boolean);
+      filter.domain = domainList.length === 1 ? domainList[0] : { $in: domainList };
+    }
     if (stage && stage !== 'All Stages') filter.stage = stage;
     if (city) filter.city = new RegExp(city, 'i');
     if (country) filter.country = new RegExp(country, 'i');
@@ -51,6 +54,38 @@ router.get('/mine', protect, async (req, res) => {
 
     res.json({ total: posts.length, posts });
   } catch (err) {
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
+// ── GET /api/posts/notifications ──────────────────────────────────────────
+router.get('/notifications', protect, async (req, res) => {
+  try {
+    const posts = await Post.find({
+      author: req.user._id,
+      'meetingRequests.status': 'Pending'
+    }).select('title meetingRequests');
+
+    const notifications = [];
+    for (const post of posts) {
+      const pending = post.meetingRequests.filter(r => r.status === 'Pending');
+      for (const req of pending) {
+        notifications.push({
+          postId: post._id,
+          postTitle: post.title,
+          requestId: req._id,
+          fromName: req.fromName || req.fromEmail,
+          createdAt: req.createdAt
+        });
+      }
+    }
+
+    // Sort by newest first
+    notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({ notifications, count: notifications.length });
+  } catch (err) {
+    console.error('[GET /notifications Error]', err);
     res.status(500).json({ message: 'Server error.' });
   }
 });
@@ -241,7 +276,7 @@ router.patch('/:id/meeting-request/:requestId', protect, async (req, res) => {
     request.status = status;
     if (status === 'Accepted') {
       request.confirmedSlot = confirmedSlot;
-      post.status = 'Meeting Scheduled';
+      // Don't auto-change post status; owner can accept multiple and manually deactivate
     }
 
     await post.save();

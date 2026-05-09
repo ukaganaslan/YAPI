@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { postsAPI } from '../utils/api';
+import { COUNTRIES_AND_CITIES, COUNTRIES } from '../utils/locations';
 
 const DOMAINS = [
   'Cardiology', 'Radiology', 'Neurology', 'General Surgery',
@@ -58,7 +59,13 @@ export default function CreatePost() {
   }, [id, isEdit, navigate]);
 
   const setField = (field, value) => {
-    setForm((f) => ({ ...f, [field]: value }));
+    setForm((f) => {
+      const updated = { ...f, [field]: value };
+      if (field === 'country') {
+        updated.city = ''; // reset city when country changes
+      }
+      return updated;
+    });
     setErrors((e) => ({ ...e, [field]: '' }));
   };
 
@@ -243,24 +250,29 @@ export default function CreatePost() {
             {/* City + Country */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">City</label>
-                <input
-                  type="text"
-                  value={form.city}
-                  onChange={(e) => setField('city', e.target.value)}
-                  placeholder="e.g., Boston"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:border-blue-500 transition-colors"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">Country</label>
-                <input
-                  type="text"
+                <select
                   value={form.country}
                   onChange={(e) => setField('country', e.target.value)}
-                  placeholder="e.g., United States"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 text-sm focus:border-blue-500 transition-colors"
-                />
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-900 bg-white text-sm focus:border-blue-500 transition-colors"
+                >
+                  <option value="">Select country…</option>
+                  {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">City</label>
+                <select
+                  value={form.city}
+                  onChange={(e) => setField('city', e.target.value)}
+                  disabled={!form.country}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-900 bg-white text-sm focus:border-blue-500 transition-colors disabled:bg-slate-50 disabled:text-slate-400"
+                >
+                  <option value="">{form.country ? 'Select city…' : 'Select country first'}</option>
+                  {form.country && COUNTRIES_AND_CITIES[form.country] && COUNTRIES_AND_CITIES[form.country].map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

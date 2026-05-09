@@ -65,6 +65,7 @@ export const postsAPI = {
     return apiFetch(`/posts${qs ? `?${qs}` : ''}`);
   },
   getMine: () => apiFetch('/posts/mine'),
+  getNotifications: () => apiFetch('/posts/notifications'),
   getById: (id) => apiFetch(`/posts/${id}`),
   create: (body) => apiFetch('/posts', { method: 'POST', body: JSON.stringify(body) }),
   update: (id, body) => apiFetch(`/posts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
@@ -96,4 +97,14 @@ export const adminAPI = {
   getStats: () => apiFetch('/admin/stats'),
 };
 
+// ── Messages ──────────────────────────────────────────────────────────────────
+export const messagesAPI = {
+  getConversations: () => apiFetch('/messages/conversations'),
+  getHistory: (postId, partnerId) => apiFetch(`/messages/${postId}/${partnerId}`),
+  send: (postId, partnerId, content) =>
+    apiFetch(`/messages/${postId}/${partnerId}`, { method: 'POST', body: JSON.stringify({ content }) }),
+  getUnreadCount: () => apiFetch('/messages/unread-count'),
+};
+
 export default apiFetch;
+

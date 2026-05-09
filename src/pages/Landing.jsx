@@ -62,9 +62,9 @@ const STEPS = [
 ];
 
 const featureIcon = {
-  blue:    'bg-blue-100 text-blue-600',
-  teal:    'bg-teal-100 text-teal-600',
-  indigo:  'bg-indigo-100 text-indigo-600',
+  blue: 'bg-blue-100 text-blue-600',
+  teal: 'bg-teal-100 text-teal-600',
+  indigo: 'bg-indigo-100 text-indigo-600',
   emerald: 'bg-emerald-100 text-emerald-600',
 };
 
@@ -119,7 +119,7 @@ export default function Landing() {
 
             <div className="flex flex-col sm:flex-row gap-4 mb-20">
               <Link
-                to="/register"
+                to="/dashboard"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold text-base rounded-xl transition-all btn-press"
                 style={{ background: '#2563EB', color: '#FFFFFF' }}
                 onMouseEnter={e => e.currentTarget.style.background = '#1D4ED8'}

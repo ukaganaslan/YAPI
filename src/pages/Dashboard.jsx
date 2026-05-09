@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { postsAPI, getUser } from '../utils/api';
 
@@ -81,13 +81,99 @@ function PostCard({ post, userCity }) {
   );
 }
 
+function DomainDropdown({ domains, setDomains }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const toggle = (d) => {
+    setDomains((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
+    );
+  };
+
+  const hasSelection = domains.length > 0;
+  const label = hasSelection
+    ? domains.length === 1 ? domains[0] : `${domains.length} Domains`
+    : 'All Domains';
+
+  return (
+    <div className="relative flex-shrink-0" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all whitespace-nowrap ${
+          hasSelection
+            ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+            : 'bg-white text-slate-700 border-slate-300 hover:border-blue-400 hover:text-blue-600'
+        }`}
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+        </svg>
+        {label}
+        {hasSelection && (
+          <span
+            onClick={(e) => { e.stopPropagation(); setDomains([]); }}
+            className="w-4 h-4 rounded-full bg-white/30 hover:bg-white/50 flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </span>
+        )}
+        <svg
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-20">
+          {DOMAINS.filter(d => d !== 'All').map((d) => {
+            const checked = domains.includes(d);
+            return (
+              <button
+                key={d}
+                onClick={() => toggle(d)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                  checked ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-50 font-medium'
+                }`}
+              >
+                <span className={`w-4 h-4 rounded flex items-center justify-center border-2 flex-shrink-0 transition-colors ${
+                  checked ? 'bg-blue-600 border-blue-600' : 'border-slate-300'
+                }`}>
+                  {checked && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </span>
+                {d}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AllPosts({ userCity }) {
   const [posts, setPosts] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [domain, setDomain] = useState('All');
+  const [domains, setDomains] = useState([]);
   const [stage, setStage] = useState('All Stages');
 
   useEffect(() => {
@@ -95,6 +181,7 @@ function AllPosts({ userCity }) {
       setLoading(true);
       setError('');
       try {
+        const domain = domains.length === 0 ? 'All' : domains.join(',');
         const data = await postsAPI.getAll({ domain, stage, search });
         setPosts(data.posts || []);
         setTotal(data.total || 0);
@@ -107,14 +194,14 @@ function AllPosts({ userCity }) {
     };
     const timer = setTimeout(fetch, 300);
     return () => clearTimeout(timer);
-  }, [domain, stage, search]);
+  }, [domains, stage, search]);
 
-  const clearFilters = () => { setSearch(''); setDomain('All'); setStage('All Stages'); };
+  const clearFilters = () => { setSearch(''); setDomains([]); setStage('All Stages'); };
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <div className="relative flex-1 min-w-0">
           <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -122,31 +209,18 @@ function AllPosts({ userCity }) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects, expertise, keywords…"
+            placeholder="Search projects…"
             className="w-full pl-11 pr-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder-slate-400 focus:border-blue-500 text-sm transition-colors"
           />
         </div>
+        <DomainDropdown domains={domains} setDomains={setDomains} />
         <select
           value={stage}
           onChange={(e) => setStage(e.target.value)}
-          className="px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-700 text-sm focus:border-blue-500 transition-colors"
+          className="px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-700 text-sm focus:border-blue-500 transition-colors flex-shrink-0"
         >
           {STAGES.map((s) => <option key={s}>{s}</option>)}
         </select>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-8">
-        {DOMAINS.map((d) => (
-          <button
-            key={d}
-            onClick={() => setDomain(d)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              domain === d ? 'bg-slate-900 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800'
-            }`}
-          >
-            {d}
-          </button>
-        ))}
       </div>
 
       {loading ? (
@@ -254,15 +328,6 @@ export default function Dashboard({ defaultTab = 'all' }) {
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Research Projects</h1>
               <p className="text-slate-500 text-sm mt-1">Browse and manage health-tech collaboration opportunities</p>
             </div>
-            <Link
-              to="/create-post"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-colors btn-press shadow-sm"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Post Project
-            </Link>
           </div>
 
           <div className="flex gap-1 mt-6">

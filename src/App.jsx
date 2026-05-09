@@ -9,6 +9,7 @@ import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import Messages from './pages/Messages';
 import Privacy from './pages/Privacy';
 import { clearSession, getUser } from './utils/api';
 
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="/post/:id" element={<ProtectedRoute><PostDetail /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
