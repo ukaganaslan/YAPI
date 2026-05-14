@@ -104,6 +104,8 @@ export const messagesAPI = {
   send: (postId, partnerId, content) =>
     apiFetch(`/messages/${postId}/${partnerId}`, { method: 'POST', body: JSON.stringify({ content }) }),
   getUnreadCount: () => apiFetch('/messages/unread-count'),
+  deleteConversation: (postId, partnerId) =>
+    apiFetch(`/messages/${postId}/${partnerId}`, { method: 'DELETE' }),
 };
 
 export default apiFetch;

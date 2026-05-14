@@ -229,4 +229,29 @@ router.post('/:postId/:partnerId', protect, async (req, res) => {
   }
 });
 
+// ── DELETE /api/messages/:postId/:partnerId ────────────────────────────────
+// Deletes all messages in a conversation for both parties.
+router.delete('/:postId/:partnerId', protect, async (req, res) => {
+  try {
+    const { postId, partnerId } = req.params;
+    const userId = req.user._id;
+
+    const { allowed, reason } = await canChat(postId, userId, partnerId);
+    if (!allowed) return res.status(403).json({ message: reason });
+
+    await Message.deleteMany({
+      postId,
+      $or: [
+        { sender: userId, receiver: partnerId },
+        { sender: partnerId, receiver: userId },
+      ],
+    });
+
+    res.json({ message: 'Conversation deleted.' });
+  } catch (err) {
+    console.error('[DELETE /messages Error]', err);
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 module.exports = router;

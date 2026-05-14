@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { messagesAPI, getUser } from '../utils/api';
 
+
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 function formatTime(dateStr) {
   if (!dateStr) return '';
@@ -144,6 +145,7 @@ export default function Messages() {
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [deletingConv, setDeletingConv] = useState(false);
   const bottomRef = useRef(null);
   const pollRef = useRef(null);
 
@@ -219,6 +221,22 @@ export default function Messages() {
       setError(err.message || 'Failed to send message.');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!activeConv) return;
+    if (!window.confirm(`Delete all messages with ${activeConv.partnerName}? This cannot be undone.`)) return;
+    setDeletingConv(true);
+    try {
+      await messagesAPI.deleteConversation(activeConv.postId, activeConv.partnerId);
+      setMessages([]);
+      setActiveConv(null);
+      await loadConversations();
+    } catch (err) {
+      setError(err.message || 'Failed to delete conversation.');
+    } finally {
+      setDeletingConv(false);
     }
   };
 
@@ -402,6 +420,24 @@ export default function Messages() {
                   >
                     📌 {activeConv.postTitle}
                   </Link>
+                  <button
+                    onClick={handleDeleteConversation}
+                    disabled={deletingConv}
+                    title="Delete conversation"
+                    style={{
+                      width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                      background: 'transparent', border: '1px solid #FECACA',
+                      color: '#EF4444', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#FEF2F2'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                  >
+                    <svg width={16} height={16} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
 
                 {/* Messages */}
