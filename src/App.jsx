@@ -51,7 +51,7 @@ export default function App() {
   useSessionTimeout();
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/yapi">
       <Navbar />
       <Routes>
         <Route path="/" element={<Landing />} />
