@@ -79,10 +79,27 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/healthai';
 
+async function seedAdmin() {
+  const User = require('./models/User');
+  const existing = await User.findOne({ role: 'Admin' });
+  if (!existing) {
+    await User.create({
+      name: 'Platform Admin',
+      email: 'admin@mit.edu',
+      password: 'HealthAI@2026',
+      role: 'Admin',
+      institution: 'HealthAI Platform',
+      isVerified: true,
+    });
+    console.log('✅ Admin user created: admin@mit.edu / HealthAI@2026');
+  }
+}
+
 mongoose
   .connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     console.log('✅ MongoDB connected:', MONGO_URI);
+    await seedAdmin();
     app.listen(PORT, () => {
       console.log(`🚀 HealthAI API running on http://localhost:${PORT}`);
       console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
